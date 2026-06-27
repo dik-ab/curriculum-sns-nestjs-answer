@@ -32,6 +32,11 @@ export class ChatGateway implements OnGatewayConnection {
       const token = parseCookie(client.handshake.headers.cookie).sns_session;
       if (token === undefined) throw new Error('トークンがありません');
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
+      const userId = Number(payload.sub);
+      if (!Number.isInteger(userId)) {
+        throw new Error('ユーザーIDが不正です');
+      }
+      payload.sub = userId;
       client.data.user = payload;
       this.logger.log(`接続: ${payload.username}`);
     } catch {
