@@ -24,6 +24,7 @@ curriculum-sns-nestjs-answer/
 | React | `http://localhost:5173` |
 
 Spring版SNS APIは `http://localhost:8000` を使います。React側は `.env` の `VITE_API_URL` で切り替えます。
+3000番が使われている場合は、`.env` の `PORT` を `3001` などへ変更します。
 
 ## 初回セットアップ
 
