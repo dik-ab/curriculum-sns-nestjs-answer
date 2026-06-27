@@ -22,9 +22,10 @@ curriculum-sns-nestjs-answer/
 | API | `http://localhost:3000` |
 | PostgreSQL | `localhost:5432` |
 | React | `http://localhost:5173` |
+| Socket.IO | `http://localhost:3000/chat` |
 
-Spring版SNS APIは `http://localhost:8000` を使います。React側は `.env` の `VITE_API_URL` で切り替えます。
-3000番が使われている場合は、`.env` の `PORT` を `3001` などへ変更します。
+React側は `.env` の `VITE_API_URL` を `http://localhost:3000` にします。Socket.IOも同じNestJSプロセスで動くため、通常は `VITE_SOCKET_URL` を省略できます。
+3000番が使われている場合は、このリポジトリの `.env` の `PORT` を `3001` などへ変更し、React側の `VITE_API_URL` と `VITE_SOCKET_URL` も同じURLへ合わせます。
 
 ## 初回セットアップ
 
