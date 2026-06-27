@@ -22,6 +22,11 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
+      const userId = Number(payload.sub);
+      if (!Number.isInteger(userId)) {
+        throw new UnauthorizedException('認証トークンが無効です');
+      }
+      payload.sub = userId;
       (request as Request & { user: JwtPayload }).user = payload;
     } catch {
       throw new UnauthorizedException('認証トークンが無効です');
