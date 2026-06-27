@@ -5,11 +5,17 @@ import * as bcrypt from 'bcrypt';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
+function getSetCookie(res: request.Response): string[] {
+  const cookie = res.headers['set-cookie'];
+  if (!cookie) throw new Error('Set-Cookie header is missing');
+  return Array.isArray(cookie) ? cookie : [cookie];
+}
+
 describe('Follow API (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let aliceToken: string;
-  let bobToken: string;
+  let aliceCookie: string[];
+  let bobCookie: string[];
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -51,47 +57,47 @@ describe('Follow API (e2e)', () => {
       ],
     });
 
-    // ログインしてそれぞれのトークンを取得する
+    // ログインしてそれぞれのHttpOnly Cookieを取得する
     const aliceRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: 'alice@example.com', password: 'password123' });
-    aliceToken = aliceRes.body.accessToken;
+    aliceCookie = getSetCookie(aliceRes);
 
     const bobRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: 'bob@example.com', password: 'password123' });
-    bobToken = bobRes.body.accessToken;
+    bobCookie = getSetCookie(bobRes);
 
-    expect(aliceToken).toBeDefined();
-    expect(bobToken).toBeDefined();
+    expect(aliceCookie).toBeDefined();
+    expect(bobCookie).toBeDefined();
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('トークンなしではフォローできない（401）', async () => {
+  it('Cookieなしではフォローできない（401）', async () => {
     await request(app.getHttpServer()).post('/users/bob/follow').expect(401);
   });
 
   it('aliceがbobをフォローすると201が返る', async () => {
     await request(app.getHttpServer())
       .post('/users/bob/follow')
-      .set('Authorization', `Bearer ${aliceToken}`)
+      .set('Cookie', aliceCookie)
       .expect(201);
   });
 
   it('同じ相手への二重フォローは409が返る', async () => {
     await request(app.getHttpServer())
       .post('/users/bob/follow')
-      .set('Authorization', `Bearer ${aliceToken}`)
+      .set('Cookie', aliceCookie)
       .expect(409);
   });
 
   it('bobのプロフィールにフォロー状態が反映される', async () => {
     const res = await request(app.getHttpServer())
       .get('/users/bob')
-      .set('Authorization', `Bearer ${aliceToken}`)
+      .set('Cookie', aliceCookie)
       .expect(200);
 
     expect(res.body.isFollowing).toBe(true);
@@ -101,13 +107,13 @@ describe('Follow API (e2e)', () => {
   it('フォロー中タイムラインにbobの投稿が表示される', async () => {
     await request(app.getHttpServer())
       .post('/posts')
-      .set('Authorization', `Bearer ${bobToken}`)
+      .set('Cookie', bobCookie)
       .send({ content: 'ボブの投稿です' })
       .expect(201);
 
     const res = await request(app.getHttpServer())
       .get('/posts/timeline')
-      .set('Authorization', `Bearer ${aliceToken}`)
+      .set('Cookie', aliceCookie)
       .expect(200);
 
     const contents = res.body.map((post: { content: string }) => post.content);
@@ -117,12 +123,12 @@ describe('Follow API (e2e)', () => {
   it('フォローを解除するとタイムラインからbobの投稿が消える', async () => {
     await request(app.getHttpServer())
       .delete('/users/bob/follow')
-      .set('Authorization', `Bearer ${aliceToken}`)
+      .set('Cookie', aliceCookie)
       .expect(204);
 
     const res = await request(app.getHttpServer())
       .get('/posts/timeline')
-      .set('Authorization', `Bearer ${aliceToken}`)
+      .set('Cookie', aliceCookie)
       .expect(200);
 
     const contents = res.body.map((post: { content: string }) => post.content);
