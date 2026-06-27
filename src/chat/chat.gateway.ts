@@ -14,7 +14,7 @@ import { ConversationsService } from './conversations.service';
 
 @WebSocketGateway({
   namespace: 'chat',
-  cors: { origin: process.env.FRONTEND_URL },
+  cors: { origin: process.env.FRONTEND_URL, credentials: true },
 })
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
@@ -29,7 +29,9 @@ export class ChatGateway implements OnGatewayConnection {
 
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth.token as string | undefined;
+      const token =
+        (client.handshake.auth.token as string | undefined) ??
+        parseCookie(client.handshake.headers.cookie).sns_session;
       if (token === undefined) throw new Error('トークンがありません');
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
       client.data.user = payload;
@@ -77,4 +79,14 @@ export class ChatGateway implements OnGatewayConnection {
       .to(`conversation:${payload.conversationId}`)
       .emit('newMessage', message);
   }
+}
+
+function parseCookie(header: string | undefined): Record<string, string> {
+  if (!header) return {};
+  return Object.fromEntries(
+    header.split(';').map((part) => {
+      const [key, ...value] = part.trim().split('=');
+      return [key, decodeURIComponent(value.join('='))];
+    }),
+  );
 }

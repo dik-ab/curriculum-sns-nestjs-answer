@@ -98,5 +98,4 @@ pnpm run test:e2e
 - デプロイやインフラ構築はこのリポジトリでは扱いません。
 - DBだけDocker Composeで起動し、APIはローカルのNode.jsで実行します。
 - Prismaは教材と合わせるため5系に固定しています。
-- 現行教材のNestJS版はJWTを `localStorage` に保存する方式です。共通仕様ページでは今後の標準としてHttpOnly Cookie方式を定義しています。
-
+- ログイン成功時は `sns_session` をHttpOnly Cookieで発行します。React側は `credentials: "include"` でAPIを呼びます。

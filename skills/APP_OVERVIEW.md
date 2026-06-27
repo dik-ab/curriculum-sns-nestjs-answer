@@ -4,7 +4,7 @@
 
 ## 機能
 
-- 認証: 登録、ログイン、メール確認、JWT Guard
+- 認証: 登録、ログイン、ログアウト、メール確認、HttpOnly Cookie、JWT Guard
 - 投稿: 作成、一覧、削除
 - いいね: 追加、解除、件数表示
 - フォロー: フォロー、解除、フォロー中タイムライン
@@ -18,6 +18,10 @@
 - PostgreSQL 16（Docker Compose）
 - Socket.IO
 - Jest / Supertest
+
+## 認証方式
+
+ログイン時に `sns_session` Cookieを発行します。CookieはHttpOnly、SameSite=Lax、開発環境ではSecure=falseです。HTTP APIとSocket.IO Gatewayは、このCookieから現在のユーザーを復元します。
 
 ## 起動
 
@@ -34,4 +38,3 @@ APIは `http://localhost:3000` で起動します。
 - メール送信は `MAIL_TRANSPORT=console` にすると、確認URLがサーバーログに出ます。
 - AWSデプロイやCDKはこの回答リポジトリの対象外です。
 - アバター画像アップロードのS3実送信は応用扱いです。ローカルでSNS主要機能を確認する場合はプロフィールテキスト更新まで確認します。
-
